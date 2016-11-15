@@ -4,7 +4,7 @@
 
 namespace neptools {
 
-    PacArchive::PacArchive(fs::path & pacfile) :
+    PacArchive::PacArchive(fs::path pacfile) :
     filepath(pacfile), data_offset(0)
     {
     }

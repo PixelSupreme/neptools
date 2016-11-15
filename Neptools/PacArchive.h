@@ -46,7 +46,7 @@ namespace neptools {
         string info() const;
 
         PacArchive() = delete;
-        PacArchive(fs::path& pacfile);
+        PacArchive(fs::path pacfile);
         PacArchive(PacArchive&) = default;
         PacArchive(PacArchive&& other) = default;
         ~PacArchive() = default;
