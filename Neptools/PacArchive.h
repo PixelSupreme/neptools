@@ -43,7 +43,8 @@ namespace neptools {
     public:
         void open();
 
-        string info() const;
+        
+        string print_info() const;
 
         PacArchive() = delete;
         PacArchive(fs::path pacfile);

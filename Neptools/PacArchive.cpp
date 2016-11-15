@@ -38,7 +38,7 @@ namespace neptools {
         data_offset = sizeof(Header) + header.entry_count * sizeof(PacIndexEntry);
     }
 
-    string PacArchive::info() const
+    string PacArchive::print_info() const
     {
         stringstream info;
         info << "Header data\n";
@@ -50,7 +50,7 @@ namespace neptools {
         auto count{ 1 };
         for (auto current : index)
         {
-            info << "Entry no    : " << count << '\n';
+            info << "Entry no.   : " << count << '\n';
             info << "ID          : " << current.file_id << '\n';
             info << "Filename    : " << string(current.filename.data()) << '\n';
             info << "Stored size : " << current.stored_size << '\n';

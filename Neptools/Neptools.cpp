@@ -15,7 +15,7 @@ int main()
     std::string file_name{ "c:\\test\\game00001.pac" };
     PacArchive archive{ fs::path(file_name) };
     archive.open();
-    cout << archive.info();
+    cout << archive.print_info();
     return 0;
 }
 
