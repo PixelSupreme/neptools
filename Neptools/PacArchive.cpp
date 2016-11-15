@@ -1,5 +1,6 @@
 #include "stdafx.h"
 #include "PacArchive.h"
+#include <sstream>
 
 namespace neptools {
 
@@ -37,4 +38,29 @@ namespace neptools {
         data_offset = sizeof(Header) + header.entry_count * sizeof(PacIndexEntry);
     }
 
+    string PacArchive::info() const
+    {
+        stringstream info;
+        info << "Header data\n";
+        info << "PAC Filename : " << filepath.filename().string() << '\n';
+        info << "Sequenceno.  : " << header.sequence_number << '\n';
+        info << "File counts  : " << header.entry_count << '\n';
+        info << "field_2 value: " << header.field_2 << '\n';
+        info << "\nIndex data\n";
+        auto count{ 1 };
+        for (auto current : index)
+        {
+            info << "Entry no    : " << count << '\n';
+            info << "ID          : " << current.file_id << '\n';
+            info << "Filename    : " << string(current.filename.data()) << '\n';
+            info << "Stored size : " << current.stored_size << '\n';
+            info << "Uncomp. size: " << current.uncompressed_size << '\n';
+            info << "Comp. flag  : " << current.compression_flag << '\n';
+            info << "Offset      : " << current.offset << '\n';
+            info << "field_0     : " << current.field_0 << '\n';
+            info << "Field_66    : " << current.field_66 << "\n\n";
+            count++;
+        }
+        return info.str();
+    }
 }

@@ -26,7 +26,7 @@ namespace neptools {
         int32_t file_id;
         array<char,260> filename;
         int32_t field_66; // unknown, magic?
-        int32_t compressed_size;
+        int32_t stored_size;
         int32_t uncompressed_size;
         int32_t compression_flag; // seems to be always 1
         int32_t offset; // offset to this entrys fiel data
@@ -42,6 +42,8 @@ namespace neptools {
         int32_t data_offset;
     public:
         void open();
+
+        string info() const;
 
         PacArchive() = delete;
         PacArchive(fs::path& pacfile);
