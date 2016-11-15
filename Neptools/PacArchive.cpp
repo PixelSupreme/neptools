@@ -27,14 +27,14 @@ namespace neptools {
         }
 
         // read file index entries
-        entry_index.reserve(header.entry_count);
-        PacEntry entry;
+        index.reserve(header.entry_count);
+        PacIndexEntry entry;
         for (auto i{ 0 }; i < header.entry_count; i++)
         {
-            in.read(reinterpret_cast<char*>(&entry), sizeof(PacEntry));
-            entry_index.push_back(entry);
+            in.read(reinterpret_cast<char*>(&entry), sizeof(PacIndexEntry));
+            index.push_back(entry);
         }
-        data_offset = sizeof(Header) + header.entry_count * sizeof(PacEntry);
+        data_offset = sizeof(Header) + header.entry_count * sizeof(PacIndexEntry);
     }
 
 }

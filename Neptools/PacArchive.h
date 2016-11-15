@@ -20,9 +20,8 @@ namespace neptools {
     };
 
     // entry index data
-    struct PacEntry
+    struct PacIndexEntry
     {
-    public:
         int32_t field_0; // magic? maybe always 0
         int32_t file_id;
         array<char,260> filename;
@@ -39,14 +38,14 @@ namespace neptools {
     private:
         fs::path filepath;
         Header header;
-        vector<PacEntry> entry_index;
+        vector<PacIndexEntry> index;
         int32_t data_offset;
     public:
         void open();
 
         PacArchive() = delete;
         PacArchive(fs::path& pacfile);
-        PacArchive(PacArchive&) = delete;
+        PacArchive(PacArchive&) = default;
         PacArchive(PacArchive&& other) = default;
         ~PacArchive() = default;
     };
