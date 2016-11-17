@@ -1,0 +1,77 @@
+Hyperdimension Neptunie Re;Birth 1 (PC)
+=======================================
+
+File structure of .PAC archive files. Integers are big endian.
+
+Header
+------
+
+Every PAC file starts with a header (offset 0x00). It contains a magic ID
+and the number of files contained inside the archive.
+
+struct header {
+	char[8] identifier // DW_PACK\0
+	int32 field_8      // seems to be always zero
+	int32 entry_count  // number of files in archive
+	int32 seq_number   // sequence number of archive files?
+}
+
+size(header) = 20
+
+header.seq_number seems to be related to the sequence number of multi-file archives.
+E.g. GAME00000.PAC and GAME00001.PAC
+
+File index entries
+------------------
+
+After the header the PAC file contains an index of files. There are header.entry_count
+entries in the index, one for each file. The first entry is located immediately after 
+the header (offset 0x14).
+
+struct index_entry {
+	int32    field_0            // magic? always zero?
+	int32    file_id
+	char[260] file_name
+	int32    field_10C           // magic? always zero?
+	int32    stored_size
+	int32    uncompressed_size
+	int32    compression_flag   // 0 for uncompressed, 1 for compressed
+	int32    offset             // rel offset into the data area
+}
+
+size(index_entry) = 288
+
+stored_size includes the size of the header before each chunk of compressed file data.
+The actual file data starts after the last index entry.
+
+Date area
+---------
+
+The rest of the PAC file after the last index entry contains the compressed files.
+the offset for the data area is:
+
+	data_offset = size(header) + header.entry_count * size(index_entry)
+	
+That makes the offset of every individual file:
+
+	file_offset = data_offset + index_entry.offset
+
+The data chunk for each file starts with a header.
+
+struct data_header {
+	int32 magic // 0x00001234
+	int32 chunk_count
+	int32 chunk_size
+	int32 header_size
+	int32 uncompressed_size
+	int32 compressed_size
+	int32 offset
+}
+size(data_header) = 28	
+
+data_header.uncompressed_size is the size of the compressed file excluding the data_header.
+
+After data entry header follows the actual file data. Files are compressed using huffman 
+coding. At the start of the file data is a bitstring necessary to reconstruct the huffman tree.
+
+Use the reconstructed huffman tree to decode the file.
