@@ -37,18 +37,16 @@ namespace neptools {
     class PacArchive
     {
     private:
-        fs::path filepath;
+        wstring filename;
         Header header;
         vector<PacIndexEntry> index;
         int32_t data_offset;
     public:
-        void open();
+        void open(const fs::path& fielpath);
+        
+        wstring print_info() const;
 
-
-        string print_info() const;
-
-        PacArchive() = delete;
-        PacArchive(fs::path pacfile);
+        PacArchive();
         PacArchive(PacArchive&) = default;
         PacArchive(PacArchive&& other) = default;
         ~PacArchive() = default;
