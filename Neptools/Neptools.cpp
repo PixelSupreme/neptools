@@ -4,6 +4,7 @@
 #include "stdafx.h"
 #include <iostream>
 #include <boost/program_options.hpp>
+#include <boost/filesystem.hpp>
 
 #include "PacArchive.h"
 
@@ -30,7 +31,7 @@ void print_help(po::options_description desc)
 
 //Parse the command line
 //
-bool get_commandline(int argc, wchar_t** argv, Options options)
+void parse_commandline(int argc, wchar_t** argv, Options options)
 {
     try
     {
@@ -55,46 +56,36 @@ bool get_commandline(int argc, wchar_t** argv, Options options)
         if (vmap.count("help"))
         {
             print_help(general);
-            return false;
+            exit(1);
         }
 
         vmap.notify();
         if (!vmap.count("gamedir"))
         {
-            cout << "Error: no input directory specified\n";
-            print_help(general);
-            return false;
+            throw std::invalid_argument("No input directory set.");
         }
         if (!vmap.count("outdir"))
         {
-            cout << "Error: no output directory specified\n";
-            print_help(general);
-            return false;
+            options.out_dir = fs::absolute(fs::system_complete(argv[0])).generic_wstring();
+            wcout << L"No outdir set. Using default: " << options.out_dir << endl;
         }
-        return true;
     }
     catch (const exception& e)
     {
         wcout << e.what() << endl;
-        return false;
+        exit(1);
     }
 }
 
 int wmain(int argc, wchar_t* argv[])
 {
-    // initialize char conversion from system locale
-    locale::global(locale("")); 
+    // initialize char <> wchar_t conversion from system locale
+    locale::global(locale(""));
 
     // Process command line
-    Options options{L"blah", L"blubb"};
-
-    {
-        if (!get_commandline(argc, argv, options))
-        {
-            return -1;
-        }
-    }
-
+    Options options{ L"blah", L"blubb" };
+    parse_commandline(argc, argv, options);
+    
     return 0;
 }
 
