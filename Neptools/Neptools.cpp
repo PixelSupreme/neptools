@@ -31,7 +31,7 @@ void print_help(po::options_description desc)
 
 //Parse the command line
 //
-void parse_commandline(int argc, wchar_t** argv, Options options)
+void parse_commandline(int argc, wchar_t** argv, Options& options)
 {
     try
     {
@@ -83,9 +83,12 @@ int wmain(int argc, wchar_t* argv[])
     locale::global(locale(""));
 
     // Process command line
-    Options options{ L"blah", L"blubb" };
+    Options options{ L"", L"" };
     parse_commandline(argc, argv, options);
     
+    wcout << L"Input dir: " << options.game_dir << L'\n';
+    wcout << L"output dir: " << options.out_dir << L'\n';
+
     return 0;
 }
 
