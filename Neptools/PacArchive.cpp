@@ -45,7 +45,7 @@ namespace neptools {
         info << "PAC Filename : " << filepath.filename().string() << '\n';
         info << "Sequenceno.  : " << header.sequence_number << '\n';
         info << "File counts  : " << header.entry_count << '\n';
-        info << "field_2 value: " << header.field_2 << '\n';
+        info << "field_8 value: " << header.field_8 << '\n';
         info << "\nIndex data\n";
         auto count{ 1 };
         for (auto current : index)
@@ -58,7 +58,7 @@ namespace neptools {
             info << "Comp. flag  : " << current.compression_flag << '\n';
             info << "Offset      : " << current.offset << '\n';
             info << "field_0     : " << current.field_0 << '\n';
-            info << "Field_66    : " << current.field_66 << "\n\n";
+            info << "Field_66    : " << current.field_10c << "\n\n";
             count++;
         }
         return info.str();
