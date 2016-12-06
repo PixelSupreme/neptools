@@ -6,11 +6,16 @@ MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Neptools", "Neptools\Neptools.vcxproj", "{8CCF8182-2EFD-4343-9266-B3242DE713ED}"
 EndProject
 Global
+	GlobalSection(Performance) = preSolution
+		HasPerformanceSessions = true
+	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
 		Debug|x86 = Debug|x86
 		Release|x64 = Release|x64
 		Release|x86 = Release|x86
+		Test|x64 = Test|x64
+		Test|x86 = Test|x86
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{8CCF8182-2EFD-4343-9266-B3242DE713ED}.Debug|x64.ActiveCfg = Debug|x64
@@ -21,6 +26,10 @@ Global
 		{8CCF8182-2EFD-4343-9266-B3242DE713ED}.Release|x64.Build.0 = Release|x64
 		{8CCF8182-2EFD-4343-9266-B3242DE713ED}.Release|x86.ActiveCfg = Release|Win32
 		{8CCF8182-2EFD-4343-9266-B3242DE713ED}.Release|x86.Build.0 = Release|Win32
+		{8CCF8182-2EFD-4343-9266-B3242DE713ED}.Test|x64.ActiveCfg = Test|x64
+		{8CCF8182-2EFD-4343-9266-B3242DE713ED}.Test|x64.Build.0 = Test|x64
+		{8CCF8182-2EFD-4343-9266-B3242DE713ED}.Test|x86.ActiveCfg = Test|Win32
+		{8CCF8182-2EFD-4343-9266-B3242DE713ED}.Test|x86.Build.0 = Test|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
