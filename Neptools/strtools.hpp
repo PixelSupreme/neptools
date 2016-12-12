@@ -27,24 +27,30 @@
 
 // Convert from UTF-8 to UTF-16
 inline std::wstring widen(const std::string& in) {
-    static wstring_convert<codecvt_utf8_utf16<wchar_t>> converter;
+    static std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
     return converter.from_bytes(in.data());
 }
 
 // Conver from UTF-16 to UTF-8
 inline std::string narrow(const std::wstring& in) {
-    static wstring_convert<codecvt_utf8_utf16<wchar_t>> converter;
+    static std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
     return converter.to_bytes(in.data());
 }
 
-// Print UTF-8 encoded string to the console. Depends on font support
+// Print UTF-8 encoded string to stdout.
 inline void u8print(const std::string& in) {
     auto buffer = widen(in);
     ::WriteConsoleW(GetStdHandle(STD_OUTPUT_HANDLE), buffer.c_str(), buffer.length(), nullptr, nullptr);
 }
 
+// Print UTF-8 encoded string to stderr.
+inline void u8error(const std::string& in) {
+    auto buffer = widen(in);
+    ::WriteConsoleW(GetStdHandle(STD_ERROR_HANDLE), buffer.c_str(), buffer.length(), nullptr, nullptr);
+}
+
 // Convert from ANSI codepage to UTF-8
-inline std::string cp2utf8(const std::string& in, const unsigned int cp) {
+inline std::string cp2utf(const std::string& in, const unsigned int cp) {
     if (in.empty())
     {
         return std::string();
@@ -57,7 +63,7 @@ inline std::string cp2utf8(const std::string& in, const unsigned int cp) {
 }
 
 // Convert from UTF-8 to ANSI codepage
-inline std::string utf82cp(const std::string& in, const unsigned int cp) {
+inline std::string utf2cp(const std::string& in, const unsigned int cp) {
     if (in.empty())
     {
         return std::string();
@@ -71,13 +77,11 @@ inline std::string utf82cp(const std::string& in, const unsigned int cp) {
 }
 
 // Convert from Shift_JIS to UTF-8
-inline std::string shift_jis2utf8(const std::string& in)
-{
-    return cp2utf8(in, 932);
+inline std::string shift_jis2utf8(const std::string& in) {
+    return cp2utf(in, 932);
 }
 
 // Convert from UTF-8 to Shift_JIS
-inline std:: string utf82shift_jis(const std::string& in)
-{
-    return utf82cp(in, 932);
+inline std::string utf82shift_jis(const std::string& in) {
+    return utf2cp(in, 932);
 }
