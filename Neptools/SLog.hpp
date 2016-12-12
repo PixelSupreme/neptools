@@ -7,63 +7,64 @@
 
 #pragma once
 
-#include <atomic>
+#include "strtools.hpp"
+
 #include <chrono>
 #include <iomanip>
 
 using namespace std;
 
 namespace neptools {
-namespace Log
+namespace log
 {
-enum class LogLevel { Trace, Info, Warning, Error, Fatal };
+enum class log_level { trace, info, warning, error, fatal };
 
-class Logger
+class logger
 {
 private:
-    LogLevel log_level;
+    log_level level;
     bool to_console;
-    wofstream logfile;
+    ofstream logfile;
 
 public:
-    Logger() :
-        log_level{ LogLevel::Error },
+    logger() :
+        level{ log_level::error },
         to_console{ true }
     {
 
     }
 
-    Logger(const Logger&) = delete;
+    logger(const logger&) = delete;
 
-    Logger(Logger&&) = default;
+    logger(logger&&) = default;
 
-    Logger& operator=(const Logger&) = delete;
+    logger& operator=(const logger&) = delete;
 
-    Logger& operator=(Logger&&) = default;
+    logger& operator=(logger&&) = default;
 
-    ~Logger()
+    ~logger()
     {
         logfile.close();
     };
 
-    void set_level(LogLevel level) noexcept {
-        log_level = level;
+    void set_level(log_level level) noexcept {
+        this->level = level;
     }
 
-    bool check_level(LogLevel level) const noexcept {
-        return level >= log_level;
+    bool check_level(log_level level) const noexcept {
+        return level >= this->level;
     }
 
     void log_to_con(bool mode) noexcept {
         to_console = mode;
     }
 
-    void set_logfile(const wstring& filename)
+    void set_logfile(const string& filename)
     {
-        logfile = wofstream(filename);
+        logfile = ofstream(filename);
         if (!logfile.is_open())
         {
-            wcerr << L"[ERR] Failed to open logfile " << filename << endl;
+            u8error("[ERR] Failed to open logfile " + filename + '\n');
         }
     }
 
@@ -72,56 +73,57 @@ public:
         logfile.close();
     }
 
-    void trace(const wstring& message)
+    void trace(const string& message)
     {
-        if (log_level <= LogLevel::Trace) {
-            write(L"[TRC] " + message);
+        if (check_level(log_level::trace)) {
+            write("[TRC] ", message);
         }
     }
 
-    void info(const wstring& message)
+    void info(const string& message)
     {
-        if (log_level <= LogLevel::Info) {
-            write(L"[IFO] " + message);
+        if (check_level(log_level::info)) {
+            write("[IFO] ", message);
         }
     }
 
-    void warning(const wstring& message)
+    void warning(const string& message)
     {
-        if (log_level <= LogLevel::Warning) {
-            write(L"[WRN] " + message);
+        if (check_level(log_level::warning)) {
+            write("[WRN] ", message);
         }
     }
 
-    void error(const wstring& message)
+    void error(const string& message)
     {
-        if (log_level <= LogLevel::Error) {
-            write(L"[ERR] " + message);
+        if (check_level(log_level::error)) {
+            write("[ERR] ", message);
         }
     }
 
-    void fatal(const wstring& message)
+    void fatal(const string& message)
     {
-        if (log_level <= LogLevel::Fatal) {
-            write(L"[FAT] " + message);
+        if (check_level(log_level::fatal)) {
+            write("[FAT] ", message);
         }
     }
 
 private:
-    void write(const wstring& message)
+    void write(const string& prefix, const string& message)
     {
         auto now = chrono::system_clock::to_time_t(chrono::system_clock::now());
         struct tm time;
         _localtime64_s(&time, &now);
-        wstringstream timestamp; 
-        timestamp << put_time(&time, L"%Y-%m-%d %X: ");
+        stringstream buff;
+        buff << put_time(&time, "%Y-%m-%d %X: ") << prefix << message;
+        string log_line = buff.str();
         if (logfile.is_open())
         {
-            logfile <<  timestamp.str() << message;
+            logfile << log_line;
         }
         if (to_console)
         {
-            wcout << timestamp.str() << message;
+            u8print(log_line);
         }
     }
 };
