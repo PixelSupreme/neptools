@@ -26,6 +26,8 @@ x64/
 x86/
 bld/
 [Bb]in/
+[Bb]in32/
+[Bb]in64/
 [Oo]bj/
 [Ll]og/
 
