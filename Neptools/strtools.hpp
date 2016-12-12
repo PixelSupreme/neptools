@@ -77,11 +77,11 @@ inline std::string utf2cp(const std::string& in, const unsigned int cp) {
 }
 
 // Convert from Shift_JIS to UTF-8
-inline std::string shift_jis2utf8(const std::string& in) {
+inline std::string shift_jis2utf(const std::string& in) {
     return cp2utf(in, 932);
 }
 
 // Convert from UTF-8 to Shift_JIS
-inline std::string utf82shift_jis(const std::string& in) {
+inline std::string utf2shift_jis(const std::string& in) {
     return utf2cp(in, 932);
 }
