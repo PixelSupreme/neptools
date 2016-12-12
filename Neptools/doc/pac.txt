@@ -1,13 +1,14 @@
-Hyperdimension Neptunie Re;Birth 1 (PC)
+Hyperdimension Neptunia Re;Birth 1 (PC)
 =======================================
 
-File structure of .PAC archive files. Integers are big endian.
+File structure of .PAC archive files. 
+Integers are big endian. It is not clear if integers are signed or unsigned.
 
 Header
 ------
 
-Every PAC file starts with a header (offset 0x00). It contains a magic ID
-and the number of files contained inside the archive.
+Every PAC file starts with a header (offset 0x00). It contains a magic ID and the number of files contained inside the 
+archive.
 
 struct header {
 	char[8] identifier // DW_PACK\0
@@ -16,39 +17,47 @@ struct header {
 	int32 seq_number   // sequence number of archive files?
 }
 
-size(header) = 20
+size(header) = 0x14
 
-header.seq_number seems to be related to the sequence number of multi-file archives.
+entry_count is the number of files stored inside the PAC archive.
+
+seq_number seems to be related to the sequence number of multi-file archives. 
 E.g. GAME00000.PAC and GAME00001.PAC
 
 File index entries
 ------------------
 
-After the header the PAC file contains an index of files. There are header.entry_count
-entries in the index, one for each file. The first entry is located immediately after 
-the header (offset 0x14).
+After the header the PAC file contains an index of files. There are header.entry_count entries in the index, one for 
+each file. The first entry is located immediately after the header (offset 0x14).
 
 struct index_entry {
 	int32    field_0            // magic? always zero?
 	int32    file_id
 	char[260] file_name
-	int32    field_10C           // magic? always zero?
+	int32    field_10C          // padding? always zero?
 	int32    stored_size
 	int32    uncompressed_size
 	int32    compression_flag   // 0 for uncompressed, 1 for compressed
-	int32    offset             // rel offset into the data area
+	int32    offset             // relative offset into the data area
 }
 
-size(index_entry) = 288
+size(index_entry) = 0x120
+
+file_id seems to be a sequential id, starting from 0. It does not span milti-file archives.
 
 stored_size includes the size of the header before each chunk of compressed file data.
+ 
+file_name is a fixed lnegth zero-terminated string encoded in Shift-JIS (Codepage 932).
+ 
+compression_flag is always 1 since all files are compressed.
+
 The actual file data starts after the last index entry.
 
 Date area
 ---------
 
 The rest of the PAC file after the last index entry contains the compressed files.
-the offset for the data area is:
+The offset for the data area is:
 
 	data_offset = size(header) + header.entry_count * size(index_entry)
 	
@@ -67,11 +76,11 @@ struct data_header {
 	int32 compressed_size
 	int32 offset
 }
-size(data_header) = 28	
+size(data_header) = 0x1C	
 
-data_header.uncompressed_size is the size of the compressed file excluding the data_header.
+uncompressed_size is the size of the compressed file excluding the data_header.
 
-After data entry header follows the actual file data. Files are compressed using huffman 
-coding. At the start of the file data is a bitstring necessary to reconstruct the huffman tree.
+After data_header follows the actual file data. Files are compressed using huffman coding. At the start of the file 
+data is a bitstring necessary to reconstruct the huffman tree.
 
 Use the reconstructed huffman tree to decode the file.
