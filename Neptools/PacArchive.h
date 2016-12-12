@@ -1,56 +1,59 @@
+// PacArchive.h
+//
+// Purpose: Class to open PAC archive files
+
 #pragma once
 
 #include <string>
-#include <array>
 #include <vector>
+#include <boost/filesystem/fstream.hpp>
 
 using namespace std;
 
 namespace neptools {
 
-// structure for headers and index entries documented in ./doc/pac.txt
-// header data
-struct Header
+// Header data
+struct header
 {
-    array<char, 8> id;
-    int32_t field_8;
-    int32_t entry_count;
-    int32_t sequence_number;
+    int entry_count;
+    int sequence_number;
 };
 
-// entry index data
-struct PacIndexEntry
+// Index entry data
+struct index_entry
 {
-    int32_t field_0;
-    int32_t file_id;
-    array<char, 260> filename;
-    int32_t field_10c;
-    int32_t stored_size;
-    int32_t uncompressed_size;
-    int32_t compression_flag;
-    int32_t offset;
+    int file_id;
+    string filename;
+    int stored_size;
+    int uncompressed_size;
+    bool compression_flag;
+    int offset;
 };
 
-class PacArchive
+class pac
 {
 private:
-    wstring filename;
-    Header header;
-    vector<PacIndexEntry> index;
+    string filename;
+    header header;
+    vector<index_entry> index;
     int data_offset;
+
 public:
-    wstring get_filename() const;
-    void open(wstring fielpath);
+    string get_filename() const;
+    void open(string fielpath);
     void reset();
 
-    wstring print_info() const;
-    wstring get_header_csv() const;
-    wstring get_index_csv() const;
+    string print_info() const;
+    string header_csv() const;
+    string index_csv() const;
 
-    PacArchive();
-    PacArchive(const PacArchive&) = default;
-    PacArchive(PacArchive&& other) = default;
-    ~PacArchive() = default;
+    pac();
+    pac(const pac&) = default;
+    pac(pac&& other) = default;
+    ~pac() = default;
+private:
+    bool read_header(boost::filesystem::ifstream& in);
+    void read_index(boost::filesystem::ifstream& in);
 };
 
 }

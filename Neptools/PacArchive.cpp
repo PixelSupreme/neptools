@@ -1,17 +1,26 @@
 // PacArchive.cpp
 //
-// Project: Neptools
-// Author: PixelSupreme
+// Copyright 2016 Reto Scheidegger
 //
-// Open and parse header and index data of PAC archive files.
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http ://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 
 #include "stdafx.h"
 #include "PacArchive.h"
-#include "strconvert.hpp"
+#include "strtools.hpp"
 
 #include <boost/filesystem.hpp>
 #include <sstream>
-#include <codecvt>
+#include <array>
 
 namespace fs = boost::filesystem;
 
@@ -19,114 +28,137 @@ using namespace std;
 
 namespace neptools {
 
+struct header_raw
+{
+    array<char, 8> id;
+    int32_t field_8;
+    int32_t entry_count;
+    int32_t sequence_number;
+};
 
-PacArchive::PacArchive() :
-    filename{ L"" },
-    header{ "", 0, 0, 0 },
+struct index_entry_raw
+{
+    int32_t field_0;
+    int32_t file_id;
+    array<char, 260> filename;
+    int32_t field_10c;
+    int32_t stored_size;
+    int32_t uncompressed_size;
+    int32_t compression_flag;
+    int32_t offset;
+};
+
+pac::pac() :
+    filename { "" },
+    header { 0, 0 },
     data_offset(0)
 {
 }
 
-wstring PacArchive::get_filename() const
-{
+string pac::get_filename() const {
     return filename;
 }
 
-
-void PacArchive::open(wstring pacfile)
-{
+void pac::open(string pacfile) {
     this->filename = pacfile;
-    fs::path pac_path{ pacfile };
+    fs::path pac_path { pacfile };
     if (pac_path.size() <= 20)
     {
-        throw invalid_argument("Invalid PAC file " + pac_path.generic_string() + ". Size too small.");
+        throw invalid_argument("File " + pac_path.generic_string() + " is not a valid PAC archive. Size too small.\n");
     }
-    fs::ifstream in(pac_path, std::ios_base::binary);
-    if (!in.good())
+    fs::ifstream ifstream(pac_path, ios_base::binary);
+    if (!ifstream.good())
     {
-        throw ios_base::failure("Failed to open PAC archive. File: " + pac_path.generic_string());
+        throw ios_base::failure("Failed to open PAC archive. File: " + pac_path.generic_string() + '\n');
     }
 
-    // read archive header
-    in.read(reinterpret_cast<char*>(&header), sizeof(Header));
-    if (std::string(header.id.data()) != "DW_PACK")
+    if (!read_header(ifstream))
     {
-        throw invalid_argument("File " + pac_path.generic_string() + " is not a valid PAC archive. ID string does not match.");
+        throw invalid_argument("File " + pac_path.generic_string() + " is not a valid PAC archive. ID string does not match.\n");
     }
-
-    // read file index entries
     index.reserve(header.entry_count);
-    PacIndexEntry entry;
-    for (auto i{ 0 }; i < header.entry_count; i++)
-    {
-        in.read(reinterpret_cast<char*>(&entry), sizeof(PacIndexEntry));
-        index.push_back(entry);
-    }
-    data_offset = sizeof(Header) + header.entry_count * sizeof(PacIndexEntry);
+    read_index(ifstream);
+    data_offset = sizeof(header_raw) + header.entry_count * sizeof(index_entry_raw);
 }
 
-void PacArchive::reset()
-{
-    filename = L"";
-    header = Header{ "", 0, 0, 0 };
-    index = vector<PacIndexEntry>();
+bool pac::read_header(fs::ifstream& in) {
+    header_raw buffer;
+    in.read(reinterpret_cast<char*>(&buffer), sizeof(header_raw));
+    if (std::string(buffer.id.data()) != "DW_PACK")
+    {
+        return false;
+    }
+    header.entry_count = buffer.entry_count;
+    header.sequence_number = buffer.sequence_number;
+    return true;
+}
+
+void pac::read_index(fs::ifstream& in) {
+    index_entry_raw buffer;
+    index_entry entry;
+    for (auto i { 0 }; i < header.entry_count; i++)
+    {
+        in.read(reinterpret_cast<char*>(&buffer), sizeof(index_entry_raw));
+        entry.file_id = buffer.file_id;
+        entry.filename = shift_jis2utf8(string(buffer.filename.data()));
+        entry.stored_size = buffer.stored_size;
+        entry.uncompressed_size = buffer.uncompressed_size;
+        entry.compression_flag = buffer.compression_flag;
+        entry.offset = buffer.offset;
+        index.emplace_back(entry);
+    }
+}
+
+void pac::reset() {
+    filename = "";
+    header.entry_count = 0;
+    header.sequence_number = 0;
+    index = vector<index_entry>();
     data_offset = 0;
 }
 
 
-wstring PacArchive::print_info() const
-{
-    wstringstream info;
-    info << L"Header data\n";
-    info << L"PAC Filename : " << filename << L'\n';
-    info << L"Sequenceno.  : " << header.sequence_number << L'\n';
-    info << L"File counts  : " << header.entry_count << L'\n';
-    info << L"field_8 value: " << header.field_8 << L'\n';
-    info << L"\nIndex data\n";
-    auto count{ 1 };
-    wstring_convert<codecvt_utf8_utf16<wchar_t>> converter;
+string pac::print_info() const {
+    stringstream info;
+    info << "Header data\n";
+    info << "PAC Filename : " << filename << '\n';
+    info << "Sequenceno.  : " << header.sequence_number << '\n';
+    info << "File counts  : " << header.entry_count << '\n';
+    info << "\nIndex data\n";
+    auto count { 1 };
     for (auto current : index)
     {
-        info << L"Entry no.   : " << count << L'\n';
-        info << L"ID          : " << current.file_id << L'\n';
-        info << L"Filename    : " << converter.from_bytes(current.filename.data()) << L'\n';
-        info << L"Stored size : " << current.stored_size << L'\n';
-        info << L"Uncomp. size: " << current.uncompressed_size << L'\n';
-        info << L"Comp. flag  : " << current.compression_flag << L'\n';
-        info << L"Offset      : " << current.offset << L'\n';
-        info << L"field_0     : " << current.field_0 << L'\n';
-        info << L"Field_10C   : " << current.field_10c << L"\n\n";
+        info << "Entry no.   : " << count << '\n';
+        info << "ID          : " << current.file_id << '\n';
+        info << "Filename    : " << current.filename << '\n';
+        info << "Stored size : " << current.stored_size << '\n';
+        info << "Uncomp. size: " << current.uncompressed_size << '\n';
+        info << "Comp. flag  : " << current.compression_flag << '\n';
+        info << "Offset      : " << current.offset << '\n';
         count++;
     }
     return info.str();
 }
 
-wstring PacArchive::get_header_csv() const
-{
-    wstringstream csv;
-    csv << L'\"' << filename << L"\",";
-    csv << header.sequence_number << L',';
-    csv << header.entry_count << L',';
-    csv << header.field_8 << L'\n';
+string pac::header_csv() const {
+    stringstream csv;
+    csv << '\"' << filename << "\",";
+    csv << header.sequence_number << ',';
+    csv << header.entry_count << ',';
     return csv.str();
 }
 
-wstring PacArchive::get_index_csv() const
-{
-    wstringstream csv;
-    wstring_convert<codecvt_utf8_utf16<wchar_t>> converter;
-    
+string pac::index_csv() const {
+    stringstream csv;
     for (auto current : index)
     {
-        csv << L'\"' << filename << L"\",";
-        csv << current.field_0 << L',';
-        csv << current.file_id << L',';
-        csv << L'\"' << shift_jis2utf16(current.filename.data()) << L"\",";
-        csv << current.stored_size << L',';
-        csv << current.uncompressed_size << L',';
-        csv << current.compression_flag << L',';
-        csv << current.offset << L',';
-        csv << current.field_10c << L'\n';
+        csv << '\"' << filename << "\",";
+        csv << current.file_id << ',';
+        csv << '\"' << current.filename << "\",";
+        csv << current.stored_size << ',';
+        csv << current.uncompressed_size << ',';
+        csv << current.compression_flag << ',';
+        csv << current.offset << '\n';
     }
     return csv.str();
 }
