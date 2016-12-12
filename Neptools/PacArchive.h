@@ -44,8 +44,8 @@ public:
     void reset();
 
     string print_info() const;
-    string header_csv() const;
-    string index_csv() const;
+    void header_csv(boost::filesystem::ofstream& file) const;
+    void index_csv(boost::filesystem::ofstream& file) const;
 
     pac();
     pac(const pac&) = default;

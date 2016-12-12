@@ -100,7 +100,7 @@ void pac::read_index(fs::ifstream& in) {
     {
         in.read(reinterpret_cast<char*>(&buffer), sizeof(index_entry_raw));
         entry.file_id = buffer.file_id;
-        entry.filename = shift_jis2utf8(string(buffer.filename.data()));
+        entry.filename = shift_jis2utf(string(buffer.filename.data()));
         entry.stored_size = buffer.stored_size;
         entry.uncompressed_size = buffer.uncompressed_size;
         entry.compression_flag = buffer.compression_flag;
@@ -140,15 +140,15 @@ string pac::print_info() const {
     return info.str();
 }
 
-string pac::header_csv() const {
+void pac::header_csv(fs::ofstream& file) const {
     stringstream csv;
     csv << '\"' << filename << "\",";
     csv << header.sequence_number << ',';
-    csv << header.entry_count << ',';
-    return csv.str();
+    csv << header.entry_count << '\n';
+    file << csv.str();
 }
 
-string pac::index_csv() const {
+void pac::index_csv(fs::ofstream& file) const {
     stringstream csv;
     for (auto current : index)
     {
@@ -160,6 +160,6 @@ string pac::index_csv() const {
         csv << current.compression_flag << ',';
         csv << current.offset << '\n';
     }
-    return csv.str();
+    file << csv.str();
 }
 }
