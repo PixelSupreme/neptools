@@ -21,12 +21,19 @@
 #include <boost/filesystem.hpp>
 #include <sstream>
 #include <array>
+#include "SLog.hpp"
 
 namespace fs = boost::filesystem;
 
 using namespace std;
 
+extern neptools::log::logger g_log;
+
 namespace neptools {
+
+const filter pac::ext_filters::gbin = L".gbin";
+const filter pac::ext_filters::gstr = L".gstr";
+const filter pac::ext_filters::cl3 = L".cl3";
 
 struct header_raw
 {
@@ -81,6 +88,30 @@ void pac::open(string pacfile) {
     data_offset = sizeof(header_raw) + header.entry_count * sizeof(index_entry_raw);
 }
 
+void pac::extract(const vector<filter>& ext_filters) {
+    fs::path filename;
+    if (ext_filters.empty())
+    {
+        g_log.info("Extracting all files.\n");
+        for (auto current : index) {
+            filename = fs::path(widen(current.filename));
+            g_log.info("Extracting file " + narrow(filename.generic_wstring()) + '\n');
+        }
+    } else
+    {
+        g_log.info("Extracting files with filters.\n");
+        for (auto current : index) {
+            filename = fs::path(widen(current.filename));
+            for (auto filter : ext_filters) {
+                if (filename.extension().compare(filter) == 0)
+                {
+                    g_log.info("Extracting file " + narrow(filename.generic_wstring()) + '\n');
+                }
+            }
+        }
+    }
+}
+
 bool pac::read_header(fs::ifstream& in) {
     header_raw buffer;
     in.read(reinterpret_cast<char*>(&buffer), sizeof(header_raw));
@@ -103,7 +134,7 @@ void pac::read_index(fs::ifstream& in) {
         entry.filename = shift_jis2utf(string(buffer.filename.data()));
         entry.stored_size = buffer.stored_size;
         entry.uncompressed_size = buffer.uncompressed_size;
-        entry.compression_flag = buffer.compression_flag;
+        entry.compression_flag = buffer.compression_flag == 1;
         entry.offset = buffer.offset;
         index.emplace_back(entry);
     }

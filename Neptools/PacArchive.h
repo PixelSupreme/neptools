@@ -30,6 +30,9 @@ struct index_entry
     int offset;
 };
 
+using filter = std::wstring;
+
+
 class pac
 {
 private:
@@ -51,6 +54,16 @@ public:
     pac(const pac&) = default;
     pac(pac&& other) = default;
     ~pac() = default;
+    
+    struct ext_filters
+    {
+        static const filter gbin;
+        static const filter gstr;
+        static const filter cl3;
+    };
+
+    void extract(const vector<filter>& filters);
+
 private:
     bool read_header(boost::filesystem::ifstream& in);
     void read_index(boost::filesystem::ifstream& in);
