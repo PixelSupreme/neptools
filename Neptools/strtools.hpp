@@ -20,21 +20,29 @@
 
 #pragma once
 
+
+
 #define _WIN32_WINNT 0x0600
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
-#include <codecvt>
 
 // Convert from UTF-8 to UTF-16
 inline std::wstring widen(const std::string& in) {
-    static std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
-    return converter.from_bytes(in.data());
+    auto in_size = in.size();
+    auto wide_size = ::MultiByteToWideChar(CP_UTF8, 0, &in[0], in_size, nullptr, 0);
+    std::wstring out(wide_size, 0);
+    ::MultiByteToWideChar(CP_UTF8, 0, &in[0], in_size, &out[0], wide_size);
+    return out;
+
 }
 
 // Conver from UTF-16 to UTF-8
 inline std::string narrow(const std::wstring& in) {
-    static std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
-    return converter.to_bytes(in.data());
+    auto in_size = in.size();
+    auto narrow_size = ::WideCharToMultiByte(CP_UTF8, 0, &in[0], in_size, nullptr, 0, nullptr, nullptr);
+    std::string out(narrow_size, 0);
+    ::WideCharToMultiByte(CP_UTF8, 0, &in[0], in_size, &out[0], narrow_size, nullptr, nullptr);
+    return out;
 }
 
 // Print UTF-8 encoded string to stdout.
@@ -48,6 +56,19 @@ inline void u8error(const std::string& in) {
     auto buffer = widen(in);
     ::WriteConsoleW(GetStdHandle(STD_ERROR_HANDLE), buffer.c_str(), buffer.length(), nullptr, nullptr);
 }
+
+// Print UTF-16 encoded string to stdout
+inline void u16print(const std::wstring& in)
+{
+    ::WriteConsoleW(GetStdHandle(STD_OUTPUT_HANDLE), in.c_str(), in.length(), nullptr, nullptr);
+}
+
+// Print UTF-16 encoded string to stderr
+inline void u16error(const std::wstring& in) {
+    ::WriteConsoleW(GetStdHandle(STD_ERROR_HANDLE), in.c_str(), in.length(), nullptr, nullptr);
+}
+
+
 
 // Convert from ANSI codepage to UTF-8
 inline std::string cp2utf(const std::string& in, const unsigned int cp) {
