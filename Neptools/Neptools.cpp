@@ -9,7 +9,7 @@
 #include "SLog.hpp"
 #include "PacArchive.h"
 #include <codecvt>
-#include "strtools.hpp"
+#include "strtools.h"
 
 using namespace neptools;
 using namespace std;

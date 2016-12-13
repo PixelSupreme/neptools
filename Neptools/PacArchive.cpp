@@ -16,7 +16,7 @@
 
 #include "stdafx.h"
 #include "PacArchive.h"
-#include "strtools.hpp"
+#include "strtools.h"
 
 #include <boost/filesystem.hpp>
 #include <sstream>

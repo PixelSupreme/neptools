@@ -20,14 +20,16 @@
 
 #pragma once
 
+#include "stdafx.h"
 
+#include "strtools.h"
 
 #define _WIN32_WINNT 0x0600
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 
 // Convert from UTF-8 to UTF-16
-inline std::wstring widen(const std::string& in) {
+std::wstring widen(const std::string& in) {
     auto in_size = in.size();
     auto wide_size = ::MultiByteToWideChar(CP_UTF8, 0, &in[0], in_size, nullptr, 0);
     std::wstring out(wide_size, 0);
@@ -37,7 +39,7 @@ inline std::wstring widen(const std::string& in) {
 }
 
 // Conver from UTF-16 to UTF-8
-inline std::string narrow(const std::wstring& in) {
+std::string narrow(const std::wstring& in) {
     auto in_size = in.size();
     auto narrow_size = ::WideCharToMultiByte(CP_UTF8, 0, &in[0], in_size, nullptr, 0, nullptr, nullptr);
     std::string out(narrow_size, 0);
@@ -46,32 +48,32 @@ inline std::string narrow(const std::wstring& in) {
 }
 
 // Print UTF-8 encoded string to stdout.
-inline void u8print(const std::string& in) {
+void u8print(const std::string& in) {
     auto buffer = widen(in);
     ::WriteConsoleW(GetStdHandle(STD_OUTPUT_HANDLE), buffer.c_str(), buffer.length(), nullptr, nullptr);
 }
 
 // Print UTF-8 encoded string to stderr.
-inline void u8error(const std::string& in) {
+void u8error(const std::string& in) {
     auto buffer = widen(in);
     ::WriteConsoleW(GetStdHandle(STD_ERROR_HANDLE), buffer.c_str(), buffer.length(), nullptr, nullptr);
 }
 
 // Print UTF-16 encoded string to stdout
-inline void u16print(const std::wstring& in)
+void u16print(const std::wstring& in)
 {
     ::WriteConsoleW(GetStdHandle(STD_OUTPUT_HANDLE), in.c_str(), in.length(), nullptr, nullptr);
 }
 
 // Print UTF-16 encoded string to stderr
-inline void u16error(const std::wstring& in) {
+void u16error(const std::wstring& in) {
     ::WriteConsoleW(GetStdHandle(STD_ERROR_HANDLE), in.c_str(), in.length(), nullptr, nullptr);
 }
 
 
 
 // Convert from ANSI codepage to UTF-8
-inline std::string cp2utf(const std::string& in, const unsigned int cp) {
+std::string cp2utf(const std::string& in, const unsigned int cp) {
     if (in.empty())
     {
         return std::string();
@@ -84,7 +86,7 @@ inline std::string cp2utf(const std::string& in, const unsigned int cp) {
 }
 
 // Convert from UTF-8 to ANSI codepage
-inline std::string utf2cp(const std::string& in, const unsigned int cp) {
+std::string utf2cp(const std::string& in, const unsigned int cp) {
     if (in.empty())
     {
         return std::string();
@@ -97,12 +99,3 @@ inline std::string utf2cp(const std::string& in, const unsigned int cp) {
     return out;
 }
 
-// Convert from Shift_JIS to UTF-8
-inline std::string shift_jis2utf(const std::string& in) {
-    return cp2utf(in, 932);
-}
-
-// Convert from UTF-8 to Shift_JIS
-inline std::string utf2shift_jis(const std::string& in) {
-    return utf2cp(in, 932);
-}
