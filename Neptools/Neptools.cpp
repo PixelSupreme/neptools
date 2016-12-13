@@ -142,10 +142,24 @@ void scan_pac_files(const fs::path& in_path, vector<fs::path>& pac_files) {
     g_log.info(buf.str());
 }
 
+void dump_csv(vector<pac> pacs)
+{
+    g_log.trace("Generating CVS data.\n");
+    fs::ofstream pac_csv("pac.csv", ios_base::binary);
+    fs::ofstream index_csv("index.csv", ios_base::binary);
+    for (auto current : pacs)
+    {
+        g_log.trace("Current PAC file: " + current.get_filename() + '\n');
+        current.header_csv(pac_csv);
+        current.index_csv(index_csv);
+    }
+}
+
 int wmain(int argc, wchar_t* argv[]) {
     g_log.set_logfile("nep.log");
     g_log.set_level(log::log_level::trace);
 
+    
     // Process command line
     options options { "", "" };
     parse_commandline(argc, argv, options);
@@ -174,16 +188,18 @@ int wmain(int argc, wchar_t* argv[]) {
         pacs.push_back(archive);
         archive.reset();
     }
-
-    g_log.trace("Generating CVS data.\n");
-    fs::ofstream pac_csv("pac.csv", ios_base::binary);
-    fs::ofstream index_csv("index.csv", ios_base::binary);
-    for (auto current : pacs)
+    vector<filter> filters;
+    filters.emplace_back(pac::ext_filters::gbin);
+    filters.emplace_back(pac::ext_filters::cl3);
+    for (pac current : pacs)
     {
-        g_log.trace("Current PAC file: " + current.get_filename() + '\n');
-        current.header_csv(pac_csv);
-        current.index_csv(index_csv);
+        auto filename = fs::path(current.get_filename()).filename();
+        if (filename.compare(string("SYSTEM00000.pac")) == 0)
+        {
+            current.extract(filters);
+        }
     }
+    //dump_csv(pacs);
     return 0;
 }
 
